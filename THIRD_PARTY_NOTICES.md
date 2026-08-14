@@ -2,11 +2,21 @@
 
 This file records third-party software, assets, datasets, models and hosted services used by OmniSmart.
 
-## Current planning release
+## Application foundation
 
-No application dependency or third-party asset is bundled in the repository yet.
+| Component | Version family | Purpose | License/terms |
+|---|---|---|---|
+| Spring Boot | 4.1.x | Backend framework | Apache-2.0 |
+| React | 19.x | Web interface | MIT |
+| Vite | 8.x | Frontend toolchain | MIT |
+| Vitest | 4.x | Frontend tests | MIT |
+| PostgreSQL | 17.x | Relational database | PostgreSQL License |
+| Flyway Community | Managed by Spring Boot | Database migrations | Apache-2.0 for applicable community components |
+| H2 Database Engine | Managed by Spring Boot | Backend tests | MPL-2.0 or EPL-1.0 |
 
-The competition HTML, training PDF and earlier local planning notes used as planning references are intentionally not redistributed in this repository because their redistribution terms have not been confirmed.
+Exact resolved versions are recorded in `frontend/package-lock.json` and the Maven dependency graph. Before a release candidate is published, maintainers will generate and review a dependency inventory or software bill of materials (SBOM) so transitive dependencies are represented too.
+
+The competition HTML, training PDF and earlier local planning notes used as planning references are intentionally not redistributed because their redistribution terms have not been confirmed.
 
 ## Required entry format
 
@@ -14,5 +24,4 @@ The competition HTML, training PDF and earlier local planning notes used as plan
 |---|---|---|---|---|
 | Example only | 0.0.0 | Replace when adopted | https://example.com | SPDX identifier |
 
-Remove the example and add a reviewed entry in the same pull request that introduces each dependency or asset. API service terms must be recorded separately from open-source dependency licenses.
-
+Add a reviewed entry in the same pull request that introduces each dependency or asset. API service terms must be recorded separately from open-source dependency licenses.

@@ -1,0 +1,268 @@
+main {
+  min-height: 100vh;
+}
+.topbar,
+.hero,
+.workflow-section,
+.principle,
+footer {
+  width: min(1120px, calc(100% - 40px));
+  margin-inline: auto;
+}
+
+.topbar {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+}
+
+.brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--ink);
+  text-decoration: none;
+  font-weight: 750;
+  letter-spacing: -0.02em;
+}
+
+.brand-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--ink);
+  color: var(--paper);
+  font-family: var(--serif);
+  font-size: 21px;
+}
+
+.release-badge,
+.eyebrow,
+.section-kicker,
+.step {
+  font-family: var(--mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.release-badge {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.hero {
+  padding-block: clamp(72px, 11vw, 140px);
+}
+
+.eyebrow,
+.section-kicker {
+  color: var(--copper);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.hero h1 {
+  max-width: 880px;
+  margin: 20px 0 24px;
+  font-family: var(--serif);
+  font-size: clamp(42px, 7vw, 82px);
+  font-weight: 650;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-wrap: balance;
+}
+
+.hero-copy {
+  max-width: 700px;
+  color: var(--muted);
+  font-size: clamp(17px, 2vw, 21px);
+  line-height: 1.65;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 36px;
+}
+
+.button {
+  min-height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 20px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 700;
+}
+
+.button-primary {
+  background: var(--copper);
+  color: white;
+}
+
+.button-secondary {
+  border-color: var(--line-strong);
+  color: var(--ink);
+  background: var(--panel);
+}
+
+.button:focus-visible,
+a:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--copper) 55%, transparent);
+  outline-offset: 3px;
+}
+
+.workflow-section {
+  padding-block: 72px;
+  border-top: 1px solid var(--line);
+}
+
+.section-heading {
+  display: grid;
+  grid-template-columns: 1.35fr 0.65fr;
+  align-items: end;
+  gap: 48px;
+  margin-bottom: 36px;
+}
+
+.section-heading h2 {
+  margin: 10px 0 0;
+  font-family: var(--serif);
+  font-size: clamp(31px, 4vw, 50px);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+}
+
+.section-heading p,
+.workflow-card p,
+.principle p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.workflow-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.workflow-card {
+  min-height: 220px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--panel);
+}
+
+.workflow-card:nth-child(even) {
+  background: var(--teal-soft);
+}
+
+.step {
+  margin-bottom: auto;
+  color: var(--copper);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.workflow-card h3 {
+  margin: 28px 0 8px;
+  font-family: var(--serif);
+  font-size: 23px;
+}
+
+.principle {
+  margin-block: 32px 86px;
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-left: 4px solid var(--teal);
+  background: var(--teal-soft);
+}
+
+.principle-icon {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: var(--teal);
+  color: white;
+  font-weight: 900;
+}
+
+.principle strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+footer {
+  min-height: 92px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 14px;
+}
+
+footer a {
+  color: var(--ink);
+}
+
+@media (max-width: 880px) {
+  .workflow-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .section-heading {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+}
+
+@media (max-width: 560px) {
+  .topbar,
+  .hero,
+  .workflow-section,
+  .principle,
+  footer {
+    width: min(100% - 28px, 1120px);
+  }
+
+  .release-badge {
+    display: none;
+  }
+
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .workflow-card {
+    min-height: 190px;
+  }
+
+  .principle {
+    align-items: flex-start;
+  }
+
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 8px;
+  }
+}

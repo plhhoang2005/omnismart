@@ -124,7 +124,7 @@ Nhờ vậy hệ thống có thể thay mock bằng API thật hoặc thêm kên
 | Lớp | Công nghệ | Quyết định |
 |---|---|---|
 | Frontend | React + TypeScript + Vite + TailwindCSS | SPA responsive, ưu tiên desktop/tablet |
-| Backend | Java 21 + Spring Boot 3.5.x | Modular monolith, REST API, OpenAPI |
+| Backend | Java 21 + Spring Boot 4.1.x | Modular monolith, REST API, OpenAPI |
 | Auth | Spring Security + Google OAuth2/email | Session hoặc refresh token trong HttpOnly cookie; không lưu token nhạy cảm trong localStorage |
 | Database | PostgreSQL | Nguồn dữ liệu chuẩn, migration bằng Flyway |
 | Background jobs | PostgreSQL job table + Spring scheduler | Có lock, retry, idempotency; chưa cần RabbitMQ |
@@ -134,7 +134,7 @@ Nhờ vậy hệ thống có thể thay mock bằng API thật hoặc thêm kên
 | Observability | Structured logs + error tracking + health checks | Correlation ID cho từng request/job |
 | CI/CD | GitHub Actions hoặc nền tảng tương đương | lint, test, build image, migrate, deploy, smoke test |
 
-Spring Boot 3.5.x vẫn nằm trong danh sách bản ổn định hiện hành; Java 17 trở lên được hỗ trợ trong các dòng Spring Boot hiện tại. Xem [Spring Boot system requirements](https://docs.spring.io/spring-boot/system-requirements.html).
+Spring Boot 4.1.x hỗ trợ Java 17 đến Java 26; dự án chọn Java 21 LTS để cân bằng độ ổn định và vòng đời hỗ trợ. Xem [Spring Boot system requirements](https://docs.spring.io/spring-boot/system-requirements.html).
 
 ### Vì sao bỏ RabbitMQ và Redis ở MVP
 

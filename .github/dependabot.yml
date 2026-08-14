@@ -1,5 +1,31 @@
 version: 2
 updates:
+  - package-ecosystem: npm
+    directory: /frontend
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: maven
+    directory: /backend
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 5
+
+  - package-ecosystem: docker
+    directories:
+      - /backend
+      - /frontend
+    schedule:
+      interval: weekly
+    labels:
+      - dependencies
+    open-pull-requests-limit: 5
+
   - package-ecosystem: github-actions
     directory: /
     schedule:
@@ -8,4 +34,3 @@ updates:
       - dependencies
       - github-actions
     open-pull-requests-limit: 5
-

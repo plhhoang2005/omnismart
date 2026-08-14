@@ -22,6 +22,7 @@ Thumbs.db
 backend/target/
 backend/build/
 .gradle/
+*.class
 
 # Node
 frontend/node_modules/
@@ -32,4 +33,3 @@ frontend/coverage/
 logs/
 tmp/
 *.log
-

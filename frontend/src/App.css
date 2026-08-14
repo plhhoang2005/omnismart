@@ -54,6 +54,43 @@ footer {
   font-size: 12px;
 }
 
+.header-login,
+.user-action button {
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+}
+
+.header-login {
+  text-underline-offset: 4px;
+}
+
+.user-action {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.user-action button {
+  padding: 8px 12px;
+  border: 1px solid var(--line-strong);
+  border-radius: 7px;
+  background: var(--panel);
+  cursor: pointer;
+}
+
+.auth-alert {
+  width: min(1120px, calc(100% - 40px));
+  margin: 18px auto 0;
+  padding: 14px 18px;
+  border: 1px solid #d9a68e;
+  border-radius: 8px;
+  background: #fff1e9;
+  color: #743516;
+}
+
 .hero {
   padding-block: clamp(72px, 11vw, 140px);
 }
@@ -122,6 +159,56 @@ a:focus-visible {
 .workflow-section {
   padding-block: 72px;
   border-top: 1px solid var(--line);
+}
+
+.account-panel {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto 72px;
+  padding: 28px;
+  display: grid;
+  grid-template-columns: 0.8fr 1.2fr;
+  gap: 32px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--teal-soft);
+}
+
+.account-panel h2 {
+  margin: 9px 0 6px;
+  font-family: var(--serif);
+  font-size: clamp(28px, 4vw, 42px);
+}
+
+.account-panel p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.membership-list {
+  display: grid;
+  gap: 10px;
+}
+
+.membership-list article {
+  padding: 16px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+}
+
+.membership-list article span {
+  color: var(--copper);
+  font-family: var(--mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.membership-list small {
+  color: var(--muted);
 }
 
 .section-heading {
@@ -232,6 +319,10 @@ footer a {
     grid-template-columns: 1fr;
     gap: 18px;
   }
+
+  .account-panel {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 560px) {
@@ -239,12 +330,23 @@ footer a {
   .hero,
   .workflow-section,
   .principle,
+  .account-panel,
+  .auth-alert,
   footer {
     width: min(100% - 28px, 1120px);
   }
 
   .release-badge {
     display: none;
+  }
+
+  .user-action > span {
+    display: none;
+  }
+
+  .membership-list article {
+    grid-template-columns: 1fr;
+    gap: 4px;
   }
 
   .workflow-grid {

@@ -1,0 +1,31 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  release-metadata:
+    name: Release metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Record immutable release provenance
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p release-metadata
+          printf 'tag=%s\ncommit=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" > release-metadata/provenance.txt
+          cp LICENSE NOTICE THIRD_PARTY_NOTICES.md CHANGELOG.md release-metadata/
+      - name: Upload release metadata
+        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        with:
+          name: release-metadata-${{ github.ref_name }}
+          path: release-metadata/
+          if-no-files-found: error
+

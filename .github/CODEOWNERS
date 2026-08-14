@@ -1,0 +1,8 @@
+# Default owner
+* @plhhoang2005
+
+# Sensitive areas
+/.github/ @plhhoang2005
+/infra/ @plhhoang2005
+/backend/src/main/ @plhhoang2005
+

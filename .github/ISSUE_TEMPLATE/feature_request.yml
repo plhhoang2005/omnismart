@@ -1,0 +1,32 @@
+name: Feature request
+description: Propose a user-focused improvement
+title: "feat: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: textarea
+    id: user_problem
+    attributes:
+      label: User problem
+      description: Who has the problem, and what are they trying to achieve?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed outcome
+      description: Describe the result without prescribing unnecessary implementation details.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      placeholder: "- [ ] Given... when... then..."
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence and metrics
+      description: Add user feedback, baseline data or expected product metric impact.
+

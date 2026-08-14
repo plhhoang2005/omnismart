@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  repository-quality:
+    name: Repository quality
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify required repository files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required=(README.md LICENSE NOTICE CONTRIBUTING.md SECURITY.md THIRD_PARTY_NOTICES.md CHANGELOG.md)
+          for file in "${required[@]}"; do
+            test -s "$file" || { echo "Missing or empty required file: $file"; exit 1; }
+          done
+      - name: Reject unresolved merge markers
+        shell: bash
+        run: |
+          if git grep -nE '^(<<<<<<<|=======|>>>>>>>)' -- ':!*.pdf'; then
+            echo "Unresolved merge-conflict marker found."
+            exit 1
+          fi
+      - name: Reject committed environment files
+        shell: bash
+        run: |
+          files="$(git ls-files | grep -E '(^|/)\.env($|\.)' | grep -vE '(^|/)\.env\.example$' || true)"
+          if [ -n "$files" ]; then
+            echo "Environment files must not be committed:"
+            echo "$files"
+            exit 1
+          fi
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Test and build when frontend exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -f frontend/package-lock.json ]; then
+            cd frontend
+            npm ci
+            npm test -- --run
+            npm run build
+          else
+            echo "Frontend has not been scaffolded yet."
+          fi
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Test and build when backend exists
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -x backend/mvnw ]; then
+            cd backend
+            ./mvnw --batch-mode verify
+          elif [ -x backend/gradlew ]; then
+            cd backend
+            ./gradlew build
+          else
+            echo "Backend has not been scaffolded yet."
+          fi
+

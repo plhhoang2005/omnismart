@@ -1,0 +1,35 @@
+# Local source materials that are not cleared for redistribution
+/Mô hình AI vận hành doanh nghiệp.pdf
+/cuoc-thi-pho-bien-va-de-tai-mau.html
+/PLAN_DO_AN.txt
+
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+
+# IDE and operating system
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Java
+backend/target/
+backend/build/
+.gradle/
+
+# Node
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# Runtime and temporary output
+logs/
+tmp/
+*.log
+

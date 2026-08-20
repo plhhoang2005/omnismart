@@ -1,0 +1,426 @@
+openapi: 3.1.0
+info:
+  title: OmniSmart Basic Backend API
+  version: 0.1.0
+  description: Session-based API for identity, stores, memberships, invitations and catalog.
+servers:
+  - url: http://localhost:8080
+security:
+  - sessionCookie: []
+paths:
+  /api/v1/system/status:
+    get:
+      security: []
+      operationId: getSystemStatus
+      responses:
+        '200':
+          description: Service status
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, service]
+                properties:
+                  status: { type: string, example: UP }
+                  service: { type: string, example: omnismart-backend }
+  /api/v1/auth/csrf:
+    get:
+      security: []
+      operationId: getCsrfToken
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+  /api/v1/auth/logout:
+    post:
+      operationId: logout
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Session invalidated }
+        '403': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/me:
+    get:
+      operationId: getCurrentUser
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '401': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores:
+    get:
+      operationId: listStores
+      responses:
+        '200': { $ref: '#/components/responses/ArrayResponse' }
+    post:
+      operationId: createStore
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name]
+              properties:
+                name: { type: string, minLength: 1, maxLength: 160 }
+      responses:
+        '201': { $ref: '#/components/responses/ObjectResponse' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+    get:
+      operationId: getStore
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+    patch:
+      operationId: updateStore
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, maxLength: 160 }
+                status: { type: string, enum: [ACTIVE, ARCHIVED] }
+                confirmationName: { type: string, maxLength: 160 }
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/members:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+    get:
+      operationId: listMembers
+      responses:
+        '200': { $ref: '#/components/responses/ArrayResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/members/{userId}:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/UserId'
+    patch:
+      operationId: changeMemberRole
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RoleConfirmation'
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+    delete:
+      operationId: revokeMember
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StoreNameConfirmation'
+      responses:
+        '204': { description: Membership revoked }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/invitations:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+    get:
+      operationId: listStoreInvitations
+      responses:
+        '200': { $ref: '#/components/responses/ArrayResponse' }
+    post:
+      operationId: createInvitation
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, format: email, maxLength: 320 }
+                role: { type: string, enum: [OWNER, STAFF] }
+                confirmationName: { type: string, maxLength: 160 }
+      responses:
+        '201': { $ref: '#/components/responses/ObjectResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/invitations/{invitationId}:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/InvitationId'
+    delete:
+      operationId: revokeInvitation
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [confirmationEmail]
+              properties:
+                confirmationEmail: { type: string, format: email, maxLength: 320 }
+      responses:
+        '204': { description: Invitation revoked }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/invitations:
+    get:
+      operationId: listCurrentUserInvitations
+      responses:
+        '200': { $ref: '#/components/responses/ArrayResponse' }
+  /api/v1/invitations/{invitationId}/accept:
+    parameters:
+      - $ref: '#/components/parameters/InvitationId'
+    post:
+      operationId: acceptInvitation
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody: { $ref: '#/components/requestBodies/InvitationToken' }
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '410': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/invitations/{invitationId}/decline:
+    parameters:
+      - $ref: '#/components/parameters/InvitationId'
+    post:
+      operationId: declineInvitation
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody: { $ref: '#/components/requestBodies/InvitationToken' }
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '410': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/products:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+    get:
+      operationId: listProducts
+      parameters:
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+        - { name: search, in: query, schema: { type: string, maxLength: 160 } }
+        - { name: status, in: query, schema: { type: string, enum: [ACTIVE, ARCHIVED] } }
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+    post:
+      operationId: createProduct
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductCreate' }
+      responses:
+        '201': { $ref: '#/components/responses/ObjectResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/products/{productId}:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      operationId: getProduct
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+    patch:
+      operationId: updateProduct
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ProductUpdate' }
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+    delete:
+      operationId: archiveProduct
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [version, confirmationSku]
+              properties:
+                version: { type: integer, format: int64, minimum: 0 }
+                confirmationSku: { type: string, maxLength: 64 }
+      responses:
+        '204': { description: Product archived }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/products/{productId}/media:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ProductId'
+    get:
+      operationId: listProductMedia
+      responses:
+        '200': { $ref: '#/components/responses/ArrayResponse' }
+    post:
+      operationId: uploadProductMedia
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                primary: { type: boolean, default: false }
+      responses:
+        '201': { $ref: '#/components/responses/ObjectResponse' }
+        '413': { $ref: '#/components/responses/ApiErrorResponse' }
+        '415': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/products/{productId}/media/{mediaId}:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ProductId'
+      - $ref: '#/components/parameters/MediaId'
+    delete:
+      operationId: deleteProductMedia
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '204': { description: Product image deleted }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/products/{productId}/media/{mediaId}/primary:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ProductId'
+      - $ref: '#/components/parameters/MediaId'
+    patch:
+      operationId: selectPrimaryProductMedia
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      responses:
+        '200': { $ref: '#/components/responses/ObjectResponse' }
+  /api/v1/stores/{storeId}/products/{productId}/media/{mediaId}/content:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ProductId'
+      - $ref: '#/components/parameters/MediaId'
+    get:
+      operationId: getProductMediaContent
+      responses:
+        '200':
+          description: Authorized image bytes
+          content:
+            image/jpeg: { schema: { type: string, format: binary } }
+            image/png: { schema: { type: string, format: binary } }
+            image/webp: { schema: { type: string, format: binary } }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+components:
+  securitySchemes:
+    sessionCookie:
+      type: apiKey
+      in: cookie
+      name: JSESSIONID
+  parameters:
+    CsrfHeader:
+      name: X-XSRF-TOKEN
+      in: header
+      required: true
+      schema: { type: string }
+    StoreId: { name: storeId, in: path, required: true, schema: { type: string, format: uuid } }
+    UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
+    InvitationId: { name: invitationId, in: path, required: true, schema: { type: string, format: uuid } }
+    ProductId: { name: productId, in: path, required: true, schema: { type: string, format: uuid } }
+    MediaId: { name: mediaId, in: path, required: true, schema: { type: string, format: uuid } }
+  requestBodies:
+    InvitationToken:
+      required: true
+      content:
+        application/json:
+          schema:
+            type: object
+            required: [token]
+            properties:
+              token: { type: string, minLength: 1, maxLength: 200 }
+  responses:
+    ObjectResponse:
+      description: Successful response
+      content:
+        application/json:
+          schema: { type: object }
+    ArrayResponse:
+      description: Successful list response
+      content:
+        application/json:
+          schema:
+            type: array
+            items: { type: object }
+    ApiErrorResponse:
+      description: Stable API error
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+  schemas:
+    StoreNameConfirmation:
+      type: object
+      required: [confirmationName]
+      properties:
+        confirmationName: { type: string, minLength: 1, maxLength: 160 }
+    RoleConfirmation:
+      allOf:
+        - $ref: '#/components/schemas/StoreNameConfirmation'
+        - type: object
+          required: [role]
+          properties:
+            role: { type: string, enum: [OWNER, STAFF] }
+    ProductCreate:
+      type: object
+      required: [sku, name, price, currency, inventoryQuantity]
+      properties:
+        sku: { type: string, minLength: 1, maxLength: 64 }
+        name: { type: string, minLength: 1, maxLength: 160 }
+        description: { type: [string, 'null'], maxLength: 5000 }
+        price: { type: number, minimum: 0, multipleOf: 0.01 }
+        currency: { type: string, enum: [VND, USD] }
+        inventoryQuantity: { type: integer, minimum: 0 }
+    ProductUpdate:
+      type: object
+      required: [version]
+      properties:
+        version: { type: integer, format: int64, minimum: 0 }
+        sku: { type: string, maxLength: 64 }
+        name: { type: string, maxLength: 160 }
+        description: { type: [string, 'null'], maxLength: 5000 }
+        price: { type: number, minimum: 0, multipleOf: 0.01 }
+        currency: { type: string, enum: [VND, USD] }
+        inventoryQuantity: { type: integer, minimum: 0 }
+    ApiError:
+      type: object
+      required: [code, message, fieldErrors, traceId, path, timestamp]
+      properties:
+        code: { type: string }
+        message: { type: string }
+        fieldErrors:
+          type: array
+          items:
+            type: object
+            required: [field, message]
+            properties:
+              field: { type: string }
+              message: { type: string }
+        traceId: { type: string, format: uuid }
+        path: { type: string }
+        timestamp: { type: string, format: date-time }

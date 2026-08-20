@@ -31,6 +31,9 @@ public class StoreMember {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "updated_at", nullable = false)
+    private OffsetDateTime updatedAt;
+
     protected StoreMember() {
     }
 
@@ -38,7 +41,14 @@ public class StoreMember {
         this.storeId = storeId;
         this.userId = userId;
         this.role = role;
-        this.createdAt = OffsetDateTime.now();
+        OffsetDateTime now = OffsetDateTime.now();
+        this.createdAt = now;
+        this.updatedAt = now;
+    }
+
+    public void changeRole(StoreRole role) {
+        this.role = role;
+        this.updatedAt = OffsetDateTime.now();
     }
 
     public UUID getStoreId() {
@@ -51,5 +61,13 @@ public class StoreMember {
 
     public StoreRole getRole() {
         return role;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
     }
 }

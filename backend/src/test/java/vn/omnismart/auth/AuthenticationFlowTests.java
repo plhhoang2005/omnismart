@@ -5,8 +5,10 @@ import static org.hamcrest.Matchers.is;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.oidcLogin;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.cookie;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -17,7 +19,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.mock.web.MockHttpSession;
 
 import vn.omnismart.identity.AppUser;
 import vn.omnismart.identity.AppUserRepository;
@@ -93,31 +97,37 @@ class AuthenticationFlowTests {
     @Test
     void unauthenticatedApiRequestReceivesUnauthorizedInsteadOfLoginHtml() throws Exception {
         mockMvc.perform(get("/api/v1/me"))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.code", is("AUTHENTICATION_REQUIRED")))
+                .andExpect(jsonPath("$.traceId").isNotEmpty())
+                .andExpect(jsonPath("$.path", is("/api/v1/me")));
     }
 
     @Test
-    void ownerAndStaffChecksUseStoreMembership() throws Exception {
-        mockMvc.perform(get("/api/v1/stores/{storeId}/owner-access", ownedStoreId)
+    void membersCanReadStoreButOnlyOwnerCanUpdateIt() throws Exception {
+        mockMvc.perform(get("/api/v1/stores/{storeId}", ownedStoreId)
                         .with(googleLogin(OWNER_SUBJECT)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role", is("OWNER")));
 
-        mockMvc.perform(get("/api/v1/stores/{storeId}/membership", ownedStoreId)
+        mockMvc.perform(get("/api/v1/stores/{storeId}", ownedStoreId)
                         .with(googleLogin(STAFF_SUBJECT)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.role", is("STAFF")));
 
-        mockMvc.perform(get("/api/v1/stores/{storeId}/owner-access", ownedStoreId)
-                        .with(googleLogin(STAFF_SUBJECT)))
-                .andExpect(status().isForbidden());
+        mockMvc.perform(patch("/api/v1/stores/{storeId}", ownedStoreId)
+                        .with(googleLogin(STAFF_SUBJECT))
+                        .with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"name\":\"Unauthorized rename\"}"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
     void crossStoreAccessIsForbidden() throws Exception {
-        mockMvc.perform(get("/api/v1/stores/{storeId}/membership", otherStoreId)
+        mockMvc.perform(get("/api/v1/stores/{storeId}", otherStoreId)
                         .with(googleLogin(OWNER_SUBJECT)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -132,13 +142,18 @@ class AuthenticationFlowTests {
 
     @Test
     void logoutRequiresCsrfAndClearsTheServerSession() throws Exception {
+        MockHttpSession session = new MockHttpSession();
         mockMvc.perform(post("/api/v1/auth/logout")
                         .with(googleLogin(OWNER_SUBJECT))
+                        .session(session)
                         .with(csrf()))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isNoContent())
+                .andExpect(cookie().maxAge("JSESSIONID", 0));
+        org.assertj.core.api.Assertions.assertThat(session.isInvalid()).isTrue();
 
         mockMvc.perform(post("/api/v1/auth/logout").with(googleLogin(OWNER_SUBJECT)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.code", is("ACCESS_DENIED")));
     }
 
     private org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.OidcLoginRequestPostProcessor

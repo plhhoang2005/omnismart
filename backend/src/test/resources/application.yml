@@ -10,6 +10,9 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   flyway:
     enabled: true
   security:
@@ -26,3 +29,10 @@ spring:
 
 omnismart:
   frontend-url: http://localhost:5173
+  product-media:
+    storage-root: target/test-product-media
+
+debug: false
+logging:
+  level:
+    root: WARN

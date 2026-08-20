@@ -1,0 +1,18 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL}
+    username: ${DATABASE_USERNAME}
+    password: ${DATABASE_PASSWORD}
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        secure: true
+        same-site: ${SESSION_COOKIE_SAME_SITE:lax}
+
+omnismart:
+  frontend-url: ${FRONTEND_URL}
+  product-media:
+    storage-root: ${PRODUCT_MEDIA_STORAGE_ROOT}

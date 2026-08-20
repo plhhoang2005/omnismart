@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import vn.omnismart.audit.AuditAction;
+import vn.omnismart.audit.AuditLogService;
 import vn.omnismart.store.Store;
 import vn.omnismart.store.StoreMember;
 import vn.omnismart.store.StoreMemberRepository;
@@ -20,14 +22,17 @@ public class IdentityProvisioningService {
     private final AppUserRepository userRepository;
     private final StoreRepository storeRepository;
     private final StoreMemberRepository memberRepository;
+    private final AuditLogService auditLogService;
 
     public IdentityProvisioningService(
             AppUserRepository userRepository,
             StoreRepository storeRepository,
-            StoreMemberRepository memberRepository) {
+            StoreMemberRepository memberRepository,
+            AuditLogService auditLogService) {
         this.userRepository = userRepository;
         this.storeRepository = storeRepository;
         this.memberRepository = memberRepository;
+        this.auditLogService = auditLogService;
     }
 
     @Transactional
@@ -59,11 +64,14 @@ public class IdentityProvisioningService {
 
         AppUser user = userRepository.save(
                 new AppUser(UUID.randomUUID(), email, displayName, GOOGLE_PROVIDER, subject));
-        Store store = storeRepository.save(new Store(
+        Store store = storeRepository.save(Store.pendingOnboarding(
                 UUID.randomUUID(),
                 displayName + "'s Store",
                 "store-" + user.getId().toString().substring(0, 12)));
         memberRepository.save(new StoreMember(store.getId(), user.getId(), StoreRole.OWNER));
+        auditLogService.record(
+                store.getId(), user.getId(), AuditAction.STORE_CREATED,
+                "STORE", store.getId(), "onboardingCompleted=false");
         return user;
     }
 

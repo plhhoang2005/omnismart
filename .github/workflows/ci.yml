@@ -89,7 +89,7 @@ jobs:
           set -euo pipefail
           if [ -x backend/mvnw ]; then
             cd backend
-            ./mvnw --batch-mode --no-transfer-progress verify
+            ./mvnw --batch-mode --no-transfer-progress verify -Ppostgres-it
           elif [ -x backend/gradlew ]; then
             cd backend
             ./gradlew build

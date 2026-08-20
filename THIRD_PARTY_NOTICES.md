@@ -14,6 +14,7 @@ This file records third-party software, assets, datasets, models and hosted serv
 | PostgreSQL | 17.x | Relational database | PostgreSQL License |
 | Flyway Community | Managed by Spring Boot | Database migrations | Apache-2.0 for applicable community components |
 | H2 Database Engine | Managed by Spring Boot | Backend tests | MPL-2.0 or EPL-1.0 |
+| Testcontainers for Java | 2.0.x | Disposable PostgreSQL integration tests | MIT |
 
 Exact resolved versions are recorded in `frontend/package-lock.json` and the Maven dependency graph. Before a release candidate is published, maintainers will generate and review a dependency inventory or software bill of materials (SBOM) so transitive dependencies are represented too.
 
@@ -27,4 +28,4 @@ The competition HTML, training PDF and earlier local planning notes used as plan
 
 Add a reviewed entry in the same pull request that introduces each dependency or asset. API service terms must be recorded separately from open-source dependency licenses.
 
-The implementation follows the official Spring Security OAuth2 Login documentation and uses the official Spring Security sample repository as a design reference. No sample repository or provider token is vendored into OmniSmart.
+The implementation follows official Spring Security and Spring Data documentation. The official Spring Security samples, Spring Data examples and Spring Petclinic REST repositories were reviewed as design references. No reference repository source code or provider token is vendored into OmniSmart.

@@ -47,7 +47,13 @@ public class CurrentUserService {
     private MembershipResponse toMembership(StoreMember membership) {
         Store store = storeRepository.findById(membership.getStoreId())
                 .orElseThrow(() -> new IllegalStateException("Membership references a missing store"));
-        return new MembershipResponse(store.getId(), store.getName(), store.getSlug(), membership.getRole().name());
+        return new MembershipResponse(
+                store.getId(),
+                store.getName(),
+                store.getSlug(),
+                membership.getRole().name(),
+                store.getStatus().name(),
+                store.isOnboardingCompleted());
     }
 
     public record CurrentUserResponse(
@@ -55,8 +61,22 @@ public class CurrentUserService {
             String email,
             String displayName,
             List<MembershipResponse> memberships) {
+
+        @Override
+        public String toString() {
+            return "CurrentUserResponse[id=" + id
+                    + ", email=[REDACTED]"
+                    + ", displayName=[REDACTED]"
+                    + ", memberships=" + memberships + "]";
+        }
     }
 
-    public record MembershipResponse(UUID storeId, String storeName, String storeSlug, String role) {
+    public record MembershipResponse(
+            UUID storeId,
+            String storeName,
+            String storeSlug,
+            String role,
+            String status,
+            boolean onboardingCompleted) {
     }
 }

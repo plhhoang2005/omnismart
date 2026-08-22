@@ -23,6 +23,9 @@ Do not include real credentials or personal data in a report. The maintainers wi
 - Secrets must be provided through approved environment or secret stores.
 - OAuth credentials and connector tokens must never be committed.
 - Every business query must enforce store/tenant isolation.
+- Membership role changes and revocations must preserve at least one Owner per store.
+- Invitation tokens must be time-limited, stored only as hashes and excluded from logs.
+- Uploaded filenames, extensions and claimed MIME types are untrusted; product media must pass size, signature, structure and dimension validation before attachment.
+- Product mutations must use both store and resource IDs. Price, inventory and SKU remain human-supplied fields and must not be mutated by AI workflows.
 - Human approval is required before AI-generated content is published.
 - Dependencies and workflows are reviewed and updated regularly.
-

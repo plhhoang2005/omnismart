@@ -10,9 +10,8 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
-import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.oauth2.client.web.OAuth2AuthorizationRequestRedirectFilter;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationFailureHandler;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.logout.HttpStatusReturningLogoutSuccessHandler;
@@ -24,6 +23,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import vn.omnismart.auth.OmniSmartOidcUserService;
 import vn.omnismart.auth.DiscardingOAuth2AuthorizedClientRepository;
+import vn.omnismart.auth.OAuthRateLimitFilter;
+import vn.omnismart.auth.OAuthRateLimiter;
+import vn.omnismart.common.api.ApiSecurityErrorWriter;
 
 @Configuration
 @EnableMethodSecurity
@@ -33,9 +35,11 @@ public class SecurityConfig {
     SecurityFilterChain securityFilterChain(
             HttpSecurity http,
             OmniSmartOidcUserService oidcUserService,
+            OAuthRateLimiter oauthRateLimiter,
+            ApiSecurityErrorWriter apiSecurityErrorWriter,
             @Value("${omnismart.frontend-url}") String frontendUrl) throws Exception {
         CookieCsrfTokenRepository csrfRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
-        AuthenticationEntryPoint apiUnauthorized = new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED);
+        PathPatternRequestMatcher apiMatcher = PathPatternRequestMatcher.pathPattern("/api/**");
 
         http
                 .cors(Customizer.withDefaults())
@@ -51,9 +55,11 @@ public class SecurityConfig {
                         .permitAll()
                         .anyRequest()
                         .authenticated())
-                .exceptionHandling(exceptions -> exceptions.defaultAuthenticationEntryPointFor(
-                        apiUnauthorized,
-                        PathPatternRequestMatcher.pathPattern("/api/**")))
+                .exceptionHandling(exceptions -> exceptions
+                        .defaultAuthenticationEntryPointFor(
+                                apiSecurityErrorWriter.authenticationEntryPoint(), apiMatcher)
+                        .defaultAccessDeniedHandlerFor(
+                                apiSecurityErrorWriter.accessDeniedHandler(), apiMatcher))
                 .oauth2Login(oauth2 -> oauth2
                         .authorizedClientRepository(new DiscardingOAuth2AuthorizedClientRepository())
                         .authorizationEndpoint(endpoint -> endpoint
@@ -69,6 +75,10 @@ public class SecurityConfig {
                         .invalidateHttpSession(true)
                         .clearAuthentication(true)
                         .deleteCookies("JSESSIONID"));
+
+        http.addFilterBefore(
+                new OAuthRateLimitFilter(oauthRateLimiter),
+                OAuth2AuthorizationRequestRedirectFilter.class);
 
         return http.build();
     }

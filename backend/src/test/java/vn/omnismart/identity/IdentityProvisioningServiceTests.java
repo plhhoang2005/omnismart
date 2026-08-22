@@ -44,6 +44,9 @@ class IdentityProvisioningServiceTests {
         assertThat(secondLogin.getDisplayName()).isEqualTo("Updated Owner");
         assertThat(userRepository.count()).isEqualTo(1);
         assertThat(storeRepository.count()).isEqualTo(1);
+        assertThat(storeRepository.findAll())
+                .singleElement()
+                .satisfies(store -> assertThat(store.isOnboardingCompleted()).isFalse());
         assertThat(memberRepository.findByUserId(firstLogin.getId()))
                 .singleElement()
                 .extracting(member -> member.getRole())

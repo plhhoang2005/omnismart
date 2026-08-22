@@ -1,4 +1,6 @@
 spring:
+  profiles:
+    active: ${APP_ENV:production}
   application:
     name: omnismart-backend
   datasource:
@@ -12,8 +14,15 @@ spring:
     open-in-view: false
     hibernate:
       ddl-auto: validate
+  jackson:
+    deserialization:
+      fail-on-unknown-properties: true
   lifecycle:
     timeout-per-shutdown-phase: 20s
+  servlet:
+    multipart:
+      max-file-size: ${PRODUCT_MEDIA_MULTIPART_MAX_FILE_SIZE:6MB}
+      max-request-size: ${PRODUCT_MEDIA_MULTIPART_MAX_REQUEST_SIZE:6MB}
   security:
     oauth2:
       client:
@@ -34,11 +43,25 @@ server:
     session:
       cookie:
         http-only: true
-        secure: ${SESSION_COOKIE_SECURE:false}
+        secure: ${SESSION_COOKIE_SECURE:true}
         same-site: ${SESSION_COOKIE_SAME_SITE:lax}
 
 omnismart:
   frontend-url: ${FRONTEND_URL:http://localhost:5173}
+  membership:
+    invitation-ttl: ${MEMBERSHIP_INVITATION_TTL:PT72H}
+  product-media:
+    storage-root: ${PRODUCT_MEDIA_STORAGE_ROOT:./data/product-media}
+    max-file-size: ${PRODUCT_MEDIA_MAX_FILE_SIZE:5MB}
+    max-images-per-product: ${PRODUCT_MEDIA_MAX_IMAGES:8}
+    temporary-retention: ${PRODUCT_MEDIA_TEMPORARY_RETENTION:PT24H}
+    cleanup-interval: ${PRODUCT_MEDIA_CLEANUP_INTERVAL:PT1H}
+    cleanup-initial-delay: ${PRODUCT_MEDIA_CLEANUP_INITIAL_DELAY:PT1H}
+    cleanup-batch-size: ${PRODUCT_MEDIA_CLEANUP_BATCH_SIZE:100}
+  security:
+    oauth-rate-limit:
+      max-requests: ${OAUTH_RATE_LIMIT_MAX_REQUESTS:10}
+      window: ${OAUTH_RATE_LIMIT_WINDOW:PT1M}
 
 management:
   endpoints:

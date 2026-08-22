@@ -23,7 +23,7 @@ jobs:
           printf 'tag=%s\ncommit=%s\n' "${GITHUB_REF_NAME}" "${GITHUB_SHA}" > release-metadata/provenance.txt
           cp LICENSE NOTICE THIRD_PARTY_NOTICES.md CHANGELOG.md release-metadata/
       - name: Upload release metadata
-        uses: actions/upload-artifact@65462800fd760344b1a7b4382951275a0abb4808
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         with:
           name: release-metadata-${{ github.ref_name }}
           path: release-metadata/

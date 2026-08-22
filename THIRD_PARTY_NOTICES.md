@@ -7,6 +7,7 @@ This file records third-party software, assets, datasets, models and hosted serv
 | Component | Version family | Purpose | License/terms |
 |---|---|---|---|
 | Spring Boot | 4.1.x | Backend framework | Apache-2.0 |
+| Spring Security OAuth2 Client | Managed by Spring Boot | Google OpenID Connect login | Apache-2.0 |
 | React | 19.x | Web interface | MIT |
 | Vite | 8.x | Frontend toolchain | MIT |
 | Vitest | 4.x | Frontend tests | MIT |
@@ -25,3 +26,5 @@ The competition HTML, training PDF and earlier local planning notes used as plan
 | Example only | 0.0.0 | Replace when adopted | https://example.com | SPDX identifier |
 
 Add a reviewed entry in the same pull request that introduces each dependency or asset. API service terms must be recorded separately from open-source dependency licenses.
+
+The implementation follows the official Spring Security OAuth2 Login documentation and uses the official Spring Security sample repository as a design reference. No sample repository or provider token is vendored into OmniSmart.

@@ -2,7 +2,7 @@
 
 OmniSmart is an open-source product for helping small stores turn structured product data into reviewed, channel-ready marketing content through one traceable workflow.
 
-> Status: application foundation. The repository includes a buildable Spring Boot backend, React frontend, PostgreSQL local infrastructure and automated quality gates.
+> Status: authenticated application foundation. The repository includes Google OIDC login, store membership authorization, a buildable Spring Boot backend, React frontend, PostgreSQL local infrastructure and automated quality gates.
 
 ## Product goal
 
@@ -44,6 +44,7 @@ docs/      Architecture decisions and product documentation
 - Java 21-26
 - Node.js 24+ and npm
 - Docker Desktop with Docker Compose
+- A Google Cloud OAuth 2.0 Web client for real sign-in
 
 Maven does not need to be installed globally; use the committed Maven Wrapper.
 
@@ -54,6 +55,24 @@ Create local configuration:
 ```powershell
 Copy-Item .env.example .env
 ```
+
+Create a Web application OAuth client in Google Cloud and register this exact local redirect URI:
+
+```text
+http://localhost:8080/login/oauth2/code/google
+```
+
+Keep the real values only in your local secret store, IDE run configuration, or shell environment. For a PowerShell development session:
+
+```powershell
+$env:GOOGLE_CLIENT_ID = "your-local-client-id"
+$env:GOOGLE_CLIENT_SECRET = "your-local-client-secret"
+$env:FRONTEND_URL = "http://localhost:5173"
+$env:SESSION_COOKIE_SECURE = "false"
+$env:SESSION_COOKIE_SAME_SITE = "lax"
+```
+
+Never commit these values. In a deployed HTTPS environment, set `SESSION_COOKIE_SECURE=true` and set `FRONTEND_URL` to the exact deployed frontend origin. Prefer hosting frontend and backend on the same site. If they must be cross-site, use HTTPS and set `SESSION_COOKIE_SAME_SITE=none`.
 
 Start PostgreSQL:
 
@@ -73,6 +92,10 @@ The backend is available at `http://localhost:8080`:
 
 - `GET /actuator/health`
 - `GET /api/v1/system/status`
+- `GET /oauth2/authorization/google` starts Google login
+- `GET /api/v1/me` returns the signed-in user and store memberships
+- `GET /api/v1/auth/csrf` returns the CSRF token used by the logout request
+- `POST /api/v1/auth/logout` invalidates the session
 
 Start the frontend in another terminal:
 
@@ -83,6 +106,8 @@ npm run dev
 ```
 
 Open `http://localhost:5173`.
+
+The browser receives only the OmniSmart session cookie. Google provider tokens are discarded after authentication: they are not returned to React or stored in the application database/session. The `JSESSIONID` cookie is HttpOnly and SameSite=Lax; the separate CSRF token is intentionally readable by the frontend so it can authorize state-changing requests.
 
 ## Verify changes
 
@@ -123,6 +148,7 @@ Do not edit a migration that has already been applied to a shared environment; a
 - [Product and delivery plan](PLAN_PRODUCT_OMNISMART.md)
 - [Local infrastructure](infra/README.md)
 - [Architecture decisions](docs/adr/)
+- [Google OIDC session decision](docs/adr/0002-google-oidc-session.md)
 - [Contribution guide](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)

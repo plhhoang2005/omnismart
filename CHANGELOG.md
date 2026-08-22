@@ -15,3 +15,5 @@ The format is based on Keep a Changelog, and the project uses Semantic Versionin
 - Buildable Spring Boot and React application foundations.
 - PostgreSQL local infrastructure and a Flyway identity baseline.
 - Public system-status endpoint plus frontend and backend tests.
+- Google OpenID Connect login with HttpOnly server sessions and CSRF-protected logout.
+- Automatic first-store ownership plus Owner and Staff authorization checks.

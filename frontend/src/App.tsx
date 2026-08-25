@@ -1,7 +1,9 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import DevLoginForm from './DevLoginForm'
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+const devLoginEnabled = import.meta.env.VITE_DEV_LOGIN_ENABLED === 'true'
 
 type Membership = {
   storeId: string
@@ -90,6 +92,29 @@ function App() {
     }
   }
 
+  async function devLogin(email: string, displayName: string) {
+    const csrfResponse = await fetch(`${apiBaseUrl}/api/v1/auth/csrf`, {
+      credentials: 'include',
+    })
+    if (!csrfResponse.ok) {
+      throw new Error('Could not initialize the local login')
+    }
+    const csrf = await csrfResponse.json() as { headerName: string; token: string }
+    const response = await fetch(`${apiBaseUrl}/api/v1/auth/dev-login`, {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        [csrf.headerName]: csrf.token,
+      },
+      body: JSON.stringify({ email: email.trim(), displayName: displayName.trim() }),
+    })
+    if (!response.ok) {
+      throw new Error('Local login was rejected')
+    }
+    setAuth({ status: 'authenticated', user: await response.json() as CurrentUser })
+  }
+
   return (
     <main>
       <header className="topbar">
@@ -114,6 +139,7 @@ function App() {
           trong khi con người vẫn giữ quyền quyết định cuối cùng.
         </p>
         <div className="hero-actions">
+          {auth.status === 'guest' && devLoginEnabled && <DevLoginForm onLogin={devLogin} />}
           {auth.status === 'authenticated' ? (
             <a className="button button-primary" href="#account">Mở không gian làm việc</a>
           ) : (

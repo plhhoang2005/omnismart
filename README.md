@@ -75,6 +75,22 @@ $env:SESSION_COOKIE_SAME_SITE = "lax"
 
 Never commit these values. In a deployed HTTPS environment, set `SESSION_COOKIE_SECURE=true` and set `FRONTEND_URL` to the exact deployed frontend origin. Prefer hosting frontend and backend on the same site. If they must be cross-site, use HTTPS and set `SESSION_COOKIE_SAME_SITE=none`.
 
+### Team login during local development
+
+When the Google OAuth consent screen has publishing status **Testing**, Google accepts only accounts listed under **Google Auth Platform > Audience > Test users**. Add each teammate there when the team needs to verify the real Google redirect flow.
+
+For day-to-day local feature testing, the project also provides an explicitly opt-in login that does not contact Google. Set both flags in the root `.env` file:
+
+```dotenv
+APP_ENV=local
+DEV_LOGIN_ENABLED=true
+VITE_DEV_LOGIN_ENABLED=true
+```
+
+Restart both backend and frontend after changing the flags. A **Team test login** form will appear on the home page. Each email creates an independent local user and Owner store, and later logins with that same email reuse the same local identity.
+
+This route is protected by CSRF and requires both the `local` Spring profile and `DEV_LOGIN_ENABLED=true`. The controller is not created in staging or production. Keep both flags `false` in shared deployments and use test-only addresses such as `alice@local.omnismart.test` to avoid confusing local identities with real Google accounts.
+
 The safe default profile is `production`. Local development must explicitly use `APP_ENV=local`. For staging, set `APP_ENV=staging`, use an HTTPS `FRONTEND_URL`, and register the staging callback URL `https://<backend-host>/login/oauth2/code/google`. Staging and production always enable the Secure session cookie and refuse to start without `FRONTEND_URL`, database credentials and an explicit `PRODUCT_MEDIA_STORAGE_ROOT`.
 
 Start PostgreSQL:
@@ -98,6 +114,7 @@ The backend is available at `http://localhost:8080`:
 - `GET /oauth2/authorization/google` starts Google login
 - `GET /api/v1/me` returns the signed-in user and store memberships
 - `GET /api/v1/auth/csrf` returns the CSRF token used by the logout request
+- `POST /api/v1/auth/dev-login` creates a test session only when explicitly enabled under the local profile
 - `POST /api/v1/auth/logout` invalidates the session
 - `POST /api/v1/stores` creates a confirmed store owned by the signed-in user
 - `GET /api/v1/stores` lists only the signed-in user's stores

@@ -3,3 +3,8 @@ server:
     session:
       cookie:
         secure: ${SESSION_COOKIE_SECURE:false}
+
+omnismart:
+  security:
+    dev-login:
+      enabled: ${DEV_LOGIN_ENABLED:false}

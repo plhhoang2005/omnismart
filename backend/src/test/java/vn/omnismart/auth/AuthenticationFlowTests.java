@@ -51,6 +51,9 @@ class AuthenticationFlowTests {
     @Autowired
     private StoreMemberRepository memberRepository;
 
+    @Autowired(required = false)
+    private LocalDevLoginController localDevLoginController;
+
     private UUID ownedStoreId;
     private UUID otherStoreId;
 
@@ -138,6 +141,11 @@ class AuthenticationFlowTests {
                         .param("state", "rejected-state"))
                 .andExpect(status().is3xxRedirection())
                 .andExpect(redirectedUrl("http://localhost:5173/login?error=oauth"));
+    }
+
+    @Test
+    void devLoginIsUnavailableWithoutLocalOptIn() throws Exception {
+        org.assertj.core.api.Assertions.assertThat(localDevLoginController).isNull();
     }
 
     @Test

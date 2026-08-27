@@ -1,4 +1,4 @@
-FROM eclipse-temurin:21-jdk-jammy AS build
+FROM eclipse-temurin:22-jdk-jammy AS build
 
 WORKDIR /workspace
 COPY .mvn/ .mvn/
@@ -8,7 +8,7 @@ RUN chmod +x mvnw && ./mvnw --batch-mode --no-transfer-progress dependency:go-of
 COPY src/ src/
 RUN ./mvnw --batch-mode --no-transfer-progress package
 
-FROM eclipse-temurin:21-jre-jammy
+FROM eclipse-temurin:22-jre-jammy
 
 RUN groupadd --system omnismart && useradd --system --gid omnismart --home-dir /app omnismart
 WORKDIR /app

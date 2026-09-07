@@ -2,7 +2,7 @@
 
 OmniSmart is an open-source product for helping small stores turn structured product data into reviewed, channel-ready marketing content through one traceable workflow.
 
-> Status: authenticated application foundation. The repository includes Google OIDC login, store membership authorization, a buildable Spring Boot backend, React frontend, PostgreSQL local infrastructure and automated quality gates.
+> Status: authenticated catalog and content-approval foundation. The repository includes Google OIDC login, store membership authorization, a buildable Spring Boot backend, React frontend, PostgreSQL local infrastructure and automated quality gates.
 
 ## Product goal
 
@@ -121,6 +121,14 @@ The backend is available at `http://localhost:8080`:
 - `PATCH /api/v1/stores/{storeId}/products/{productId}/media/{mediaId}/primary` records the user's primary-image choice
 - `DELETE /api/v1/stores/{storeId}/products/{productId}/media/{mediaId}` removes a wrong image and frees its quota slot
 - `GET /api/v1/stores/{storeId}/products/{productId}/media/{mediaId}/content` streams an authorized image
+- `POST /api/v1/stores/{storeId}/products/{productId}/contents` creates a manual channel draft
+- `GET /api/v1/stores/{storeId}/contents` lists tenant-scoped content and supports product, status and channel filters
+- `GET/PATCH /api/v1/stores/{storeId}/contents/{contentId}` reads a draft or creates its next immutable version
+- `GET /api/v1/stores/{storeId}/contents/{contentId}/versions` lists immutable version history
+- `GET /api/v1/stores/{storeId}/contents/{contentId}/approvals` lists approval attempts
+- `POST /api/v1/stores/{storeId}/contents/{contentId}/submit` sends a draft for review
+- `POST /api/v1/stores/{storeId}/contents/{contentId}/approve` lets an Owner approve the submitted version
+- `POST /api/v1/stores/{storeId}/contents/{contentId}/reject` lets an Owner reject with a reason
 
 The first Google login creates one default store with `onboardingCompleted=false`. The client must ask the Owner to confirm its name through `PATCH /api/v1/stores/{storeId}` before continuing onboarding. Product mutations, media mutations and invitations are rejected with `STORE_ONBOARDING_REQUIRED` until that confirmation. Archiving requires a separate request with the exact current store name in `confirmationName`; there is intentionally no store deletion endpoint in this phase.
 
@@ -131,6 +139,8 @@ Role changes, Owner invitations and membership revocation require the current st
 Product SKUs are trimmed and normalized to uppercase and are unique only inside their store. Prices use exact decimal storage, and price/inventory values cannot be negative. Every product mutation is tenant-scoped and audited. `PATCH` and archive requests must send the last observed `version`; stale writes return `409` with `PRODUCT_VERSION_CONFLICT`. Archive is soft-delete only and additionally requires `confirmationSku`. The publishing module must implement `ProductPublicationGuard` before it introduces publishing jobs, so active jobs block archive with `PRODUCT_HAS_ACTIVE_PUBLISHING_JOBS`.
 
 Product image upload is intentionally human-driven. Send multipart field `file` and optional `primary=true`; the original filename and claimed MIME type are not trusted. The server writes to temporary storage, validates image content and dimensions, generates its own object key, and only then marks media as attached. Limits default to 5 MB and 8 images per product. A bounded scheduled cleanup removes stale temporary files and stored objects that have no database record. Local filesystem storage is the current adapter; an S3-compatible adapter can replace it without changing product business logic.
+
+Content drafting is manual in this phase. Owner and Staff can create, edit and submit drafts; only an Owner can approve or reject. Each edit creates an immutable version, each submitted version has a traceable approval attempt, and stale state-changing requests return `CONTENT_VERSION_CONFLICT`. Approved content cannot be edited in this phase. Gemini and publishing are not connected to this workflow yet.
 
 The committed API contract is [docs/openapi/backend-basic.yaml](docs/openapi/backend-basic.yaml). API failures use one JSON shape containing `code`, `message`, `fieldErrors`, `traceId`, `path` and `timestamp`; the same request ID is returned in `X-Request-Id` and added to the logging context.
 
@@ -199,11 +209,17 @@ Do not edit a migration that has already been applied to a shared environment; a
 ## Documentation
 
 - [Product and delivery plan](PLAN_PRODUCT_OMNISMART.md)
+- [Project context](docs/PROJECT_CONTEXT.md)
+- [Development workflow](docs/WORKFLOW.md)
+- [Definition of Done](docs/DEFINITION_OF_DONE.md)
+- [Development backlog](tasks/BACKLOG.md)
+- [Current task template](tasks/CURRENT_TASK.md)
 - [Local infrastructure](infra/README.md)
 - [Architecture decisions](docs/adr/)
 - [Google OIDC session decision](docs/adr/0002-google-oidc-session.md)
 - [Tenant and store lifecycle decision](docs/adr/0003-tenant-store-lifecycle.md)
 - [Membership invitation and RBAC decision](docs/adr/0004-membership-invitation-rbac.md)
+- [Content approval workflow decision](docs/adr/0006-content-approval-workflow.md)
 - [Contribution guide](CONTRIBUTING.md)
 - [Security policy](SECURITY.md)
 - [Third-party notices](THIRD_PARTY_NOTICES.md)

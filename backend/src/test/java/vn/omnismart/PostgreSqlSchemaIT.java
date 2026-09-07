@@ -49,8 +49,8 @@ class PostgreSqlSchemaIT {
                         + "ORDER BY installed_rank DESC LIMIT 1",
                 String.class);
 
-        assertThat(appliedMigrations).isEqualTo(6);
-        assertThat(currentVersion).isEqualTo("6");
+        assertThat(appliedMigrations).isEqualTo(7);
+        assertThat(currentVersion).isEqualTo("7");
     }
 
     @Test
@@ -83,6 +83,57 @@ class PostgreSqlSchemaIT {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
+    @Test
+    void databaseRejectsContentLinkedToAProductFromAnotherStore() {
+        UUID contentStore = insertStore("content-store");
+        UUID productStore = insertStore("content-product-store");
+        UUID productId = insertProduct(productStore, "CONTENT-TENANT-PRODUCT");
+
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "INSERT INTO content_item "
+                        + "(id, store_id, product_id, channel, status, current_version_number) "
+                        + "VALUES (?, ?, ?, 'FACEBOOK', 'DRAFT', 1)",
+                UUID.randomUUID(),
+                contentStore,
+                productId))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void databaseRejectsApprovalForAVersionFromAnotherContentItem() {
+        UUID storeId = insertStore("approval-store");
+        UUID productId = insertProduct(storeId, "APPROVAL-PRODUCT");
+        ContentFixture first = insertContent(storeId, productId, "FACEBOOK", "First content");
+        ContentFixture second = insertContent(storeId, productId, "TIKTOK", "Second content");
+
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "INSERT INTO content_approval "
+                        + "(id, store_id, content_item_id, submitted_version_id, status) "
+                        + "VALUES (?, ?, ?, ?, 'PENDING')",
+                UUID.randomUUID(),
+                storeId,
+                first.contentItemId(),
+                second.contentVersionId()))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    void databaseEnforcesApprovalLifecycleFields() {
+        UUID storeId = insertStore("approval-lifecycle-store");
+        UUID productId = insertProduct(storeId, "APPROVAL-LIFECYCLE");
+        ContentFixture content = insertContent(storeId, productId, "MARKETPLACE", "Body");
+
+        assertThatThrownBy(() -> jdbcTemplate.update(
+                "INSERT INTO content_approval "
+                        + "(id, store_id, content_item_id, submitted_version_id, status) "
+                        + "VALUES (?, ?, ?, ?, 'APPROVED')",
+                UUID.randomUUID(),
+                storeId,
+                content.contentItemId(),
+                content.contentVersionId()))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
     private UUID insertStore(String slug) {
         UUID storeId = UUID.randomUUID();
         jdbcTemplate.update(
@@ -105,5 +156,34 @@ class PostgreSqlSchemaIT {
                 "Integration product",
                 new BigDecimal("1000.00"));
         return productId;
+    }
+
+    private ContentFixture insertContent(
+            UUID storeId,
+            UUID productId,
+            String channel,
+            String body) {
+        UUID contentItemId = UUID.randomUUID();
+        UUID contentVersionId = UUID.randomUUID();
+        jdbcTemplate.update(
+                "INSERT INTO content_item "
+                        + "(id, store_id, product_id, channel, status, current_version_number) "
+                        + "VALUES (?, ?, ?, ?, 'DRAFT', 1)",
+                contentItemId,
+                storeId,
+                productId,
+                channel);
+        jdbcTemplate.update(
+                "INSERT INTO content_version "
+                        + "(id, store_id, content_item_id, version_number, body) "
+                        + "VALUES (?, ?, ?, 1, ?)",
+                contentVersionId,
+                storeId,
+                contentItemId,
+                body);
+        return new ContentFixture(contentItemId, contentVersionId);
+    }
+
+    private record ContentFixture(UUID contentItemId, UUID contentVersionId) {
     }
 }

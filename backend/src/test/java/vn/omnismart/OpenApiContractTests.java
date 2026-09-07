@@ -21,7 +21,16 @@ class OpenApiContractTests {
             Map<String, Object> document = new Yaml().load(input);
             assertThat(document.get("openapi")).isEqualTo("3.1.0");
             Map<String, Map<String, Object>> paths = castMap(document.get("paths"));
-            assertThat(paths).hasSize(19);
+            assertThat(paths).hasSize(27);
+            assertThat(paths).containsKeys(
+                    "/api/v1/stores/{storeId}/products/{productId}/contents",
+                    "/api/v1/stores/{storeId}/contents",
+                    "/api/v1/stores/{storeId}/contents/{contentId}",
+                    "/api/v1/stores/{storeId}/contents/{contentId}/versions",
+                    "/api/v1/stores/{storeId}/contents/{contentId}/approvals",
+                    "/api/v1/stores/{storeId}/contents/{contentId}/submit",
+                    "/api/v1/stores/{storeId}/contents/{contentId}/approve",
+                    "/api/v1/stores/{storeId}/contents/{contentId}/reject");
 
             Set<String> operationIds = new HashSet<>();
             for (Map<String, Object> pathItem : paths.values()) {

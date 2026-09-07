@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
   title: OmniSmart Basic Backend API
-  version: 0.1.0
-  description: Session-based API for identity, stores, memberships, invitations and catalog.
+  version: 0.2.0
+  description: Session-based API for identity, stores, memberships, catalog, and manual content approval.
 servers:
   - url: http://localhost:8080
 security:
@@ -264,6 +264,172 @@ paths:
       responses:
         '204': { description: Product archived }
         '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/products/{productId}/contents:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ProductId'
+    post:
+      operationId: createContent
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentCreate' }
+      responses:
+        '201':
+          description: Manual content draft created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Content' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+    get:
+      operationId: listContents
+      parameters:
+        - { name: productId, in: query, schema: { type: string, format: uuid } }
+        - { name: status, in: query, schema: { $ref: '#/components/schemas/ContentStatus' } }
+        - { name: channel, in: query, schema: { $ref: '#/components/schemas/ContentChannel' } }
+        - { name: page, in: query, schema: { type: integer, minimum: 0, default: 0 } }
+        - { name: size, in: query, schema: { type: integer, minimum: 1, maximum: 100, default: 20 } }
+      responses:
+        '200':
+          description: Tenant-scoped content page
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ContentPage' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents/{contentId}:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ContentId'
+    get:
+      operationId: getContent
+      responses:
+        '200':
+          description: Content and its current immutable version
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Content' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+    patch:
+      operationId: editContent
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentEdit' }
+      responses:
+        '200':
+          description: New immutable content version created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Content' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents/{contentId}/versions:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ContentId'
+    get:
+      operationId: listContentVersions
+      responses:
+        '200':
+          description: Immutable versions ordered newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ContentVersion' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents/{contentId}/approvals:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ContentId'
+    get:
+      operationId: listContentApprovals
+      responses:
+        '200':
+          description: Approval attempts ordered newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ContentApproval' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents/{contentId}/submit:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ContentId'
+    post:
+      operationId: submitContent
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentVersionCommand' }
+      responses:
+        '200':
+          description: Content submitted for Owner review
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Content' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents/{contentId}/approve:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ContentId'
+    post:
+      operationId: approveContent
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentVersionCommand' }
+      responses:
+        '200':
+          description: Exact submitted version approved by an Owner
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Content' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
+  /api/v1/stores/{storeId}/contents/{contentId}/reject:
+    parameters:
+      - $ref: '#/components/parameters/StoreId'
+      - $ref: '#/components/parameters/ContentId'
+    post:
+      operationId: rejectContent
+      parameters:
+        - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/ContentReject' }
+      responses:
+        '200':
+          description: Exact submitted version rejected by an Owner
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Content' }
+        '400': { $ref: '#/components/responses/ApiErrorResponse' }
+        '404': { $ref: '#/components/responses/ApiErrorResponse' }
+        '409': { $ref: '#/components/responses/ApiErrorResponse' }
   /api/v1/stores/{storeId}/products/{productId}/media:
     parameters:
       - $ref: '#/components/parameters/StoreId'
@@ -344,6 +510,7 @@ components:
     UserId: { name: userId, in: path, required: true, schema: { type: string, format: uuid } }
     InvitationId: { name: invitationId, in: path, required: true, schema: { type: string, format: uuid } }
     ProductId: { name: productId, in: path, required: true, schema: { type: string, format: uuid } }
+    ContentId: { name: contentId, in: path, required: true, schema: { type: string, format: uuid } }
     MediaId: { name: mediaId, in: path, required: true, schema: { type: string, format: uuid } }
   requestBodies:
     InvitationToken:
@@ -407,6 +574,95 @@ components:
         price: { type: number, minimum: 0, multipleOf: 0.01 }
         currency: { type: string, enum: [VND, USD] }
         inventoryQuantity: { type: integer, minimum: 0 }
+    ContentChannel:
+      type: string
+      enum: [FACEBOOK, TIKTOK, MARKETPLACE]
+    ContentStatus:
+      type: string
+      enum: [DRAFT, IN_REVIEW, APPROVED, REJECTED]
+    ApprovalStatus:
+      type: string
+      enum: [PENDING, APPROVED, REJECTED]
+    ContentCreate:
+      type: object
+      additionalProperties: false
+      required: [channel, body]
+      properties:
+        channel: { $ref: '#/components/schemas/ContentChannel' }
+        body: { type: string, minLength: 1, maxLength: 10000 }
+    ContentEdit:
+      type: object
+      additionalProperties: false
+      required: [version, body]
+      properties:
+        version: { type: integer, format: int64, minimum: 0 }
+        body: { type: string, minLength: 1, maxLength: 10000 }
+    ContentVersionCommand:
+      type: object
+      additionalProperties: false
+      required: [version]
+      properties:
+        version: { type: integer, format: int64, minimum: 0 }
+    ContentReject:
+      type: object
+      additionalProperties: false
+      required: [version, reason]
+      properties:
+        version: { type: integer, format: int64, minimum: 0 }
+        reason: { type: string, minLength: 1, maxLength: 1000 }
+    ContentVersion:
+      type: object
+      required: [id, versionNumber, body, createdByUserId, createdAt]
+      properties:
+        id: { type: string, format: uuid }
+        versionNumber: { type: integer, minimum: 1 }
+        body: { type: string, minLength: 1, maxLength: 10000 }
+        createdByUserId: { type: [string, 'null'], format: uuid }
+        createdAt: { type: string, format: date-time }
+    ContentSummary:
+      type: object
+      required: [id, storeId, productId, channel, status, currentVersionNumber, version, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        storeId: { type: string, format: uuid }
+        productId: { type: string, format: uuid }
+        channel: { $ref: '#/components/schemas/ContentChannel' }
+        status: { $ref: '#/components/schemas/ContentStatus' }
+        currentVersionNumber: { type: integer, minimum: 1 }
+        version: { type: integer, format: int64, minimum: 0 }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    Content:
+      allOf:
+        - $ref: '#/components/schemas/ContentSummary'
+        - type: object
+          required: [createdByUserId, currentVersion]
+          properties:
+            createdByUserId: { type: [string, 'null'], format: uuid }
+            currentVersion: { $ref: '#/components/schemas/ContentVersion' }
+    ContentPage:
+      type: object
+      required: [content, page, size, totalElements, totalPages]
+      properties:
+        content:
+          type: array
+          items: { $ref: '#/components/schemas/ContentSummary' }
+        page: { type: integer, minimum: 0 }
+        size: { type: integer, minimum: 1 }
+        totalElements: { type: integer, format: int64, minimum: 0 }
+        totalPages: { type: integer, minimum: 0 }
+    ContentApproval:
+      type: object
+      required: [id, submittedVersionId, status, submittedByUserId, submittedAt]
+      properties:
+        id: { type: string, format: uuid }
+        submittedVersionId: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/ApprovalStatus' }
+        submittedByUserId: { type: [string, 'null'], format: uuid }
+        reviewedByUserId: { type: [string, 'null'], format: uuid }
+        rejectionReason: { type: [string, 'null'], maxLength: 1000 }
+        submittedAt: { type: string, format: date-time }
+        reviewedAt: { type: [string, 'null'], format: date-time }
     ApiError:
       type: object
       required: [code, message, fieldErrors, traceId, path, timestamp]

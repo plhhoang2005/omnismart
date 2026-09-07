@@ -1,6 +1,6 @@
 # OmniSmart Project Context
 
-Last verified against the repository on 2026-09-06.
+Last verified against the repository on 2026-09-07.
 
 ## Product goal and current scope
 
@@ -11,11 +11,12 @@ The implemented foundation currently includes:
 - Google OpenID Connect login with a server-managed session;
 - application users, stores, tenant membership, Owner/Staff roles, and invitations;
 - tenant-scoped product catalog and validated product-image storage;
+- tenant-scoped manual content drafts, immutable versions, and Owner approval/rejection;
 - audit records, consistent API errors, request correlation, and health endpoints;
 - a basic React authentication and product-workflow landing experience;
 - PostgreSQL migrations, automated tests, Docker images, and local PostgreSQL Compose configuration.
 
-AI drafting, Google Sheets/CSV import, invitation email delivery, content approval, publishing connectors, analytics, and a complete application UI are planned but not implemented in the current source tree.
+AI drafting, Google Sheets/CSV import, invitation email delivery, publishing connectors, analytics, approved-content revisions, and a complete application UI are planned but not implemented in the current source tree.
 
 ## Technology
 
@@ -56,6 +57,7 @@ The backend is a single deployable application organized by business domain:
 | `store` | Store lifecycle, tenant membership checks, operation guards |
 | `membership` | Members, roles, invitations, and owner safeguards |
 | `catalog` | Products, media, validation, cleanup, and storage adapter |
+| `content` | Manual drafts, immutable content versions, approval state machine |
 | `audit` | Tenant-scoped audit records |
 | `common.api` | Stable API errors and request correlation |
 | `system` | Public system status |
@@ -66,11 +68,12 @@ The frontend is currently a small SPA that calls the backend with session creden
 
 ## Data and storage
 
-- Flyway owns schema evolution. Migrations `V1` through `V6` are present.
+- Flyway owns schema evolution. Migrations `V1` through `V7` are present.
 - Never edit a migration already used by a shared environment; add a new version after approval.
 - PostgreSQL is the runtime database. H2 is used for fast tests, while the `postgres-it` profile validates PostgreSQL-specific migrations and tenant constraints with a disposable PostgreSQL 17 Testcontainer.
 - Store lifecycle and product removal use recoverable archive behavior rather than hard deletion.
 - Product updates use optimistic locking.
+- Content edits and approval transitions use optimistic locking; submitted versions and approval history are retained.
 - Product media is currently stored on the local filesystem behind `MediaStorage`. Multi-instance environments require a shared implementation before rollout.
 
 ## External services
@@ -138,6 +141,7 @@ The PostgreSQL integration profile requires a working Docker engine and may down
 - Missing and unauthorized cross-tenant resources both return `404` to avoid resource disclosure.
 - Invitation tokens are time limited, single use, stored only as hashes, and omitted from list responses and audit data.
 - Product media is validated from content rather than trusting file names or claimed MIME types.
+- Content and approval reads/writes are tenant-scoped; Owner-only review actions return `404` to Staff and outsiders.
 - Human confirmation is required for sensitive lifecycle, role, archive, and publishing decisions.
 
 ## Current limitations and unknowns

@@ -199,6 +199,11 @@ Do not edit a migration that has already been applied to a shared environment; a
 ## Documentation
 
 - [Product and delivery plan](PLAN_PRODUCT_OMNISMART.md)
+- [Project context](docs/PROJECT_CONTEXT.md)
+- [Development workflow](docs/WORKFLOW.md)
+- [Definition of Done](docs/DEFINITION_OF_DONE.md)
+- [Development backlog](tasks/BACKLOG.md)
+- [Current task template](tasks/CURRENT_TASK.md)
 - [Local infrastructure](infra/README.md)
 - [Architecture decisions](docs/adr/)
 - [Google OIDC session decision](docs/adr/0002-google-oidc-session.md)
